@@ -7,5 +7,5 @@
 work and tested python2.
 
 ```
-python socks5proxy.py
+docker run --restart=always -d -v `pwd`:/opt --net=host python:2 python /opt/socks5proxy.py
 ```

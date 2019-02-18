@@ -47,7 +47,7 @@ class Socks5Server(SocketServer.StreamRequestHandler):
                         if lp != -1:
                             self.sent = True
                             remote.send(buf[:lp+4])
-                            if remote.send(buf[p+4:]) <= 0: break
+                            if remote.send(buf[lp+4:]) <= 0: break
                     if not self.sent:
                         self.sent = True
                         if remote.send(buf) <= 0: break
@@ -61,6 +61,7 @@ class Socks5Server(SocketServer.StreamRequestHandler):
                 if not buf: break
                 if sock.send(buf) <= 0: break
     def handle(self):
+        addr = ""
         try:
             #>> 'socks connection from ', self.client_address
             sock = self.connection
