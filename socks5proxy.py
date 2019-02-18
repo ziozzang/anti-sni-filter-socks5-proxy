@@ -31,11 +31,12 @@ class Socks5Server(SocketServer.StreamRequestHandler):
             if sock in r:
                 buf = sock.recv(4096)
                 if not self.marked:
-                    # build Packet Filter Marking
+                    # 1st packet marking
                     self.marked = True
                     if len(buf) == 0:
                         break
-                    if buf[0] ==  '\x16': # TLS start
+                    if buf[0] ==  '\x16':
+                        # TLS start
                         p = min(len(buf) / 5, 100) # Tricky Code. split by specific size or split by some...
                         self.sent = True
                         remote.send(buf[:p])
