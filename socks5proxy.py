@@ -14,7 +14,13 @@
 #from gevent import monkey
 #monkey.patch_all()
 
-import socket, os, sys, select, SocketServer, struct, time
+import socket, os, sys, select, struct, time
+import hexdump
+
+if sys.version_info.major == 2:
+  import SocketServer
+elif sys.version_info.major == 3:
+  import socketserver as SocketServer
 
 class ThreadingTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer): pass
 class Socks5Server(SocketServer.StreamRequestHandler):
@@ -70,12 +76,20 @@ class Socks5Server(SocketServer.StreamRequestHandler):
             sock.send(b"\x05\x00");
             # 2. Request
             data = self.rfile.read(4)
-            mode = ord(data[1])
-            addrtype = ord(data[3])
+            print(">> LEN:",len(data))
+            hexdump.hexdump(data)
+            if len(data) < 4:
+                return
+            mode = data[1]
+            addrtype = data[3]
+            print("> mode:", data[1]," / addrtype:", data[3])
             if addrtype == 1:       # IPv4
-                addr = socket.inet_ntoa(self.rfile.read(4))
+                addr = socket.inet_ntop(socket.AF_INET, self.rfile.read(4))
             elif addrtype == 3:     # Domain name
                 addr = self.rfile.read(ord(sock.recv(1)[0]))
+            elif addrtype == 4:     # IPv6
+                addr = socket.inet_ntop(socket.AF_INET6, self.rfile.read(16))
+                print("-> IPv6:", addr)
             port = struct.unpack('>H', self.rfile.read(2))
             reply = b"\x05\x00\x00\x01"
             try:
@@ -84,7 +98,7 @@ class Socks5Server(SocketServer.StreamRequestHandler):
                     self.port = port[0]
                     remote = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     remote.connect((addr, port[0]))
-                    #>> 'Tcp connect to', addr, port[0]
+                    print(">> 'Tcp connect to'", addr,":", port[0])
                 else:
                     reply = b"\x05\x07\x00\x01" # Command not supported
                 local = remote.getsockname()
@@ -101,7 +115,7 @@ class Socks5Server(SocketServer.StreamRequestHandler):
             pass
             #print 'socket error'
 def main():
-    server = ThreadingTCPServer(('', 1080), Socks5Server)
+    server = ThreadingTCPServer(('', 18080), Socks5Server)
     server.serve_forever()
 
 if __name__ == '__main__':
