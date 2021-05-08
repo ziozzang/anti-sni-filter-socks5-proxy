@@ -9,3 +9,6 @@ work and tested python2.
 ```
 docker run --restart=always -d -v `pwd`:/opt --net=host python:2 python /opt/socks5proxy.py
 ```
+
+# RFC
+* https://tools.ietf.org/html/rfc1928
